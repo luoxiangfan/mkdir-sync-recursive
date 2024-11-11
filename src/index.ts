@@ -32,7 +32,7 @@ function parseFileMode(value: unknown, name: string, def?: number) {
   return value as number;
 }
 
-export function mkdirSyncRecursive(
+function mkdirSyncRecursive(
   path: string,
   options: string | number | MakeDirectoryRecursiveOptions
 ) {
@@ -66,3 +66,5 @@ export function mkdirSyncRecursive(
   }
   return result.length ? nodePath.resolve(result[0]) : undefined;
 }
+
+export { mkdirSyncRecursive as default }
