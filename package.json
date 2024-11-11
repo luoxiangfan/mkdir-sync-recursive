@@ -33,6 +33,7 @@
   },
   "keywords": [
     "mkdir",
+    "sync",
     "mkdirSync",
     "directory",
     "folder",
