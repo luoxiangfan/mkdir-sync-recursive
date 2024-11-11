@@ -67,4 +67,4 @@ function mkdirSyncRecursive(
   return result.length ? nodePath.resolve(result[0]) : undefined;
 }
 
-export { mkdirSyncRecursive as default }
+export { mkdirSyncRecursive as default };
