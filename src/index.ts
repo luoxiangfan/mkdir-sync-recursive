@@ -34,7 +34,7 @@ function parseFileMode(value: unknown, name: string, def?: number) {
 
 function mkdirSyncRecursive(
   path: string,
-  options: string | number | MakeDirectoryRecursiveOptions
+  options?: string | number | MakeDirectoryRecursiveOptions
 ) {
   let mode = 0o777;
   if (typeof options === 'number' || typeof options === 'string') {
