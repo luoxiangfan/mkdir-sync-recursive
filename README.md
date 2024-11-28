@@ -12,5 +12,9 @@ npm install mkdir-sync-recursive
 ```js
 import mkdirSyncRecursive from 'mkdir-sync-recursive'
 
+// Returns undefined, or the first directory path created.
 mkdirSyncRecursive('/path/source')
+
+// Returns undefined, or the first directory path created of each path.
+mkdirSyncRecursive(['test', 'build/scripts', 'test/html'])
 ```
