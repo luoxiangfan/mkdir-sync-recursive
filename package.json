@@ -1,6 +1,6 @@
 {
   "name": "mkdir-sync-recursive",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Synchronously and recursively creates a directory. Returns undefined or the first directory path created.",
   "type": "module",
   "main": "./dist/index.cjs",
