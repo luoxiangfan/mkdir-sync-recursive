@@ -1,10 +1,9 @@
 import { existsSync, mkdirSync } from 'node:fs';
 import { sep, resolve } from 'node:path';
-import { isArray, parseFileMode } from './util.js';
-import type {
-  MakeDirectoryOptions,
-  MakeDirectoryRecursiveOptions
-} from './type.js';
+import { parseFileMode } from './util.js';
+import type { MakeDirectoryOptions } from 'node:fs';
+
+type MakeDirectoryRecursiveOptions = Omit<MakeDirectoryOptions, 'recursive'>;
 
 function mkdirp(
   path: string,
@@ -53,7 +52,11 @@ function mkdirSyncRecursive(
       mpath.push(mkdirp(p, options));
     }
   }
-  return isArray(mpath) ? (mpath.some((m) => !!m) ? mpath : undefined) : mpath;
+  return Array.isArray(mpath)
+    ? mpath.some((m) => !!m)
+      ? mpath
+      : undefined
+    : mpath;
 }
 
 export { mkdirSyncRecursive as default };
