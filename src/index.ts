@@ -29,8 +29,7 @@ function mkdirp(
         mkdirSync(path, mode);
         result.push(path);
         return true;
-      } catch (error) {
-        console.error(error);
+      } catch {
         return false;
       }
     }
