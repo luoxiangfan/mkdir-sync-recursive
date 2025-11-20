@@ -1,6 +1,6 @@
 {
   "name": "mkdir-sync-recursive",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Synchronously and recursively creates a directory. Returns undefined or the first directory path created.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -47,7 +47,7 @@
   },
   "homepage": "https://github.com/luoxiangfan/mkdir-sync-recursive#readme",
   "devDependencies": {
-    "@types/node": "^24.8.1",
+    "@types/node": "^24.10.1",
     "prettier": "^3.6.2",
     "typescript": "^5.9.3",
     "unbuild": "^3.6.1"
