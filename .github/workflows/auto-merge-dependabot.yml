@@ -1,0 +1,114 @@
+name: Dependabot 自动合并
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+# 关键：必须声明足够的权限
+permissions:
+  contents: write      # 允许合并PR
+  pull-requests: write # 允许操作PR
+  checks: read         # 允许读取检查状态
+
+jobs:
+  auto-merge:
+    # 仅处理来自dependabot且标签包含“dependencies”的PR
+    if: |
+      github.actor == 'dependabot[bot]' &&
+      contains(github.event.pull_request.labels.*.name, 'dependencies')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 调试输出（查看检查状态）
+        run: |
+          echo "PR 编号: ${{ github.event.pull_request.number }}"
+          echo "提交 SHA: ${{ github.event.pull_request.head.sha }}"
+          echo "触发者: ${{ github.actor }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 等待并检查所有CI状态
+        id: check-ci
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: checks } = await github.rest.checks.listForRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.payload.pull_request.head.sha,
+            });
+
+            console.log('所有检查状态:');
+            checks.check_runs.forEach(check => {
+              console.log(`- ${check.name}: status=${check.status}, conclusion=${check.conclusion}`);
+            });
+
+            // 1. 先等待, 直到所有检查都完成(没有pending状态)
+            const pendingChecks = checks.check_runs.filter(
+              run => run.status !== 'completed'
+            );
+            
+            if (pendingChecks.length > 0) {
+              console.log(`有 ${pendingChecks.length} 个检查还在进行中, 等待60秒...`);
+              await new Promise(resolve => setTimeout(resolve, 60000)); // 等待60秒
+              
+              // 再次获取检查状态
+              const { data: newChecks } = await github.rest.checks.listForRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: context.payload.pull_request.head.sha,
+              });
+              
+              // 2. 检查是否有失败的必需检查
+              const requiredChecks = newChecks.check_runs.filter(
+                run => run.conclusion !== 'success' && run.conclusion !== 'skipped' && run.conclusion !== null
+              );
+              
+              if (requiredChecks.length > 0) {
+                console.log('以下检查未通过:');
+                requiredChecks.forEach(check => {
+                  console.log(`- ${check.name}: ${check.conclusion}`);
+                });
+                core.setFailed('有些必需的检查未通过');
+                return false;
+              }
+              
+              return true;
+            }
+            
+            // 所有检查已完成，验证结果
+            const failedChecks = checks.check_runs.filter(
+              run => run.conclusion !== 'success' && run.conclusion !== 'skipped'
+            );
+            
+            if (failedChecks.length > 0) {
+              console.log('以下检查未通过:');
+              failedChecks.forEach(check => {
+                console.log(`- ${check.name}: ${check.conclusion}`);
+              });
+              core.setFailed('有些必需的检查未通过');
+              return false;
+            }
+            
+            console.log('所有检查已通过！');
+            return true;
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 自动合并 PR
+        if: steps.check-ci.outputs.result == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              await github.rest.pulls.merge({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.pull_request.number,
+                merge_method: 'squash',  // 可选：squash, merge, rebase
+                commit_title: `chore(deps): 自动合并 Dependabot 更新`
+              });
+              console.log('PR 已成功合并！');
+            } catch (error) {
+              console.error('合并失败:', error.message);
+              core.setFailed('自动合并失败: ' + error.message);
+            }
